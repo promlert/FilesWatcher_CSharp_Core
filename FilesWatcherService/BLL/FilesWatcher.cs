@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using FilesWatcherService.Models;
+using Renci.SshNet;
 
 namespace FilesWatcherService.BLL
 {
@@ -22,7 +23,10 @@ namespace FilesWatcherService.BLL
         static bool FSWUseRegex = false;
 
         static string FSWRegex = null;
-
+        static string FTPUrl = null;
+        static string FTPUser = null;
+        static string FTPPassword = null;
+        static string FTPPathUpload = null;
         #endregion
 
         #region private vars
@@ -134,7 +138,7 @@ namespace FilesWatcherService.BLL
 
                     //discard event to block other file extentions...
 
-                    if (_filteredFileTypes.Any(str => f.Extension.Equals(str)))
+                    if (_filteredFileTypes.Any(str => f.Extension.ToLower().Equals(str)))
                     {
                         DateTime eventTime = DateTime.Now;
                         string fileName = e.Name;
@@ -173,7 +177,22 @@ namespace FilesWatcherService.BLL
                             watchItem.permittedIntervalBetweenFiles = permittedIntervalBetweenFiles;
                             filesEvents.TryAdd(watchItem.FileName, watchItem);
                         }
+
+
+                    using (var client = new SftpClient(FTPUrl, FTPUser, FTPPassword))
+                    {
+                        client.Connect();
+                        using (FileStream fs = new FileStream(f.FullName, FileMode.Open, FileAccess.Read))
+                        { 
+                        client.UploadFile(fs, FTPPathUpload + f.Name);
+                       
+                        }
+                        client.Disconnect();
+                        client.Dispose();
+                        File.Move(f.FullName, f.Directory.FullName + "\\Backup\\" + f.Name, true);
                     }
+                   
+                }
                 
             }
             catch (Exception ex)
@@ -208,8 +227,10 @@ namespace FilesWatcherService.BLL
                 LogFSWEvents = bool.Parse(ConfigValueProvider.Get("FSW:LogFSWEvents"));
                 FSWUseRegex = bool.Parse(ConfigValueProvider.Get("FSW:FSWUseRegex"));
                 FSWRegex = ConfigValueProvider.Get("FSW:FSWRegex");
-
-
+                FTPUrl= ConfigValueProvider.Get("FSW:FTPUrl");
+                FTPUser= ConfigValueProvider.Get("FSW:FTPUser");
+                FTPPassword= ConfigValueProvider.Get("FSW:FTPPassword");
+                FTPPathUpload = ConfigValueProvider.Get("FSW:FTPPathUpload");
                 Console.WriteLine($"initialTimerInterval:[{initialTimerInterval}], delayedTimerIntervalAddition:[{delayedTimerIntervalAddition}], permittedIntervalBetweenEvents:[{permittedIntervalBetweenFiles}]");
                 Console.WriteLine($"LogFileReadyEvents:[{LogFileReadyEvents}], LogFSWEvents:[{LogFSWEvents}]");
 
