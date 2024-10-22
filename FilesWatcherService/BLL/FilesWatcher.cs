@@ -100,7 +100,7 @@ namespace FilesWatcherService.BLL
             _watcher.IncludeSubdirectories = true;
             _watcher.InternalBufferSize = 32768; //32KB
 
-            _watcher.Path = FSWSource;
+            _watcher.Path = string.Format( FSWSource ,DateTime.Now);
 
             Console.WriteLine($"Watching Folder: {_watcher.Path}");
 
