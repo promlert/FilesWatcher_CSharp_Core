@@ -189,7 +189,6 @@ namespace FilesWatcherService.BLL
                         }
                         client.Disconnect();
                         client.Dispose();
-                        File.Move(f.FullName, f.Directory.FullName + "\\Backup\\" + f.Name, true);
                     }
                    
                 }

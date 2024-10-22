@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using FilesWatcherService;
 using FilesWatcherService.BLL;
 using FilesWatcherService.Models;
@@ -10,9 +11,13 @@ namespace FilesWatcher_CSharp_Core
     {
         static void Main(string[] args)
         {
-            Run();
-            Console.WriteLine("File System Watcher has been started, press any key to exit...");
-            Console.ReadKey();
+            string mutex_id = "Ntec Boiler";
+            using (Mutex mutex = new Mutex(false, mutex_id))
+            {
+                Run();
+                Console.WriteLine("File System Watcher has been started, press any key to exit...");
+                Console.ReadKey();
+            }
         }
 
 
